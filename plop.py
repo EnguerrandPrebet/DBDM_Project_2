@@ -27,6 +27,8 @@ new_mat[0][6] = 'bAssists'
 
 for i in range(1,len(select_mat)):
     if(len(select_mat[i][5][0]) == 0): #Pas de kill ou pas de data ?
+        new_mat[i][5] = []
+        new_mat[i][6] = []
         continue
     else:
         new_mat[i][5] = [0]*len(select_mat[i][5])
@@ -38,7 +40,6 @@ for i in range(1,len(select_mat)):
 
 print(new_mat[1][5],new_mat[1][6]) #Exemple de résultats de la transformation
 
-#TODO: Trier la liste select_mat[1][i] pour rassembler ensuite les différents kills en k/_/a par créneau
 
 ##Rassemblement des objectifs (b)
 print(select_mat[1][6:11])
@@ -62,6 +63,8 @@ new_mat[0][9] = 'rKills'
 new_mat[0][10] = 'rAssists'
 for i in range(1,len(select_mat)):
     if(len(select_mat[i][12][0]) == 0): #Pas de kill ou pas de data ?
+        new_mat[i][9] = []
+        new_mat[i][10] = []
         continue
     else:
         new_mat[i][9] = [0]*len(select_mat[i][12])
@@ -71,7 +74,7 @@ for i in range(1,len(select_mat)):
             new_mat[i][9][j] = select_mat[i][12][j][0]
             new_mat[i][10][j] = (select_mat[i][12][j][0],len(select_mat[i][12][j]) - 3)
 
-##Rassemblement des objectifs (b)
+##Rassemblement des objectifs (r)
 print(select_mat[1][13:18])
 
 new_mat[0][11] = 'rObjectives'
@@ -84,6 +87,8 @@ print(new_mat[1][11])
 
 #réunir selon les temps (on suppose que le dernier temps donné est plus grand que tous ceux de la data)
 def func(data, dates):
+    if(len(data) == 0): #Pas vérifié, aucun objectif ou pas de data ?
+        return [0]*len(dates)
     if(type(data[0]) != tuple):
         data.sort()
         data = [(d,1) for d in data]
@@ -113,7 +118,7 @@ def func(data, dates):
 #Calcul l'écart entre les dates de l'or
 def func_gold(data, dates):
     
-    output = [data[dates[0]]//1000] + [(data[min(dates[i],len(data)-1)] - data[dates[i-1]])//1000 for i in range(1,len(dates))]
+    output = [data[dates[0]]//1000] + [(data[min(dates[i],len(data)-1)] - data[min(dates[i-1],len(data)-1)])//1000 for i in range(1,len(dates))]
     return output
     
     
@@ -140,3 +145,10 @@ print('\nColonnes :',new_mat[0])
 print('Exemple :', new_mat[1])
 print('Format : (Blue : k gold, kills, assists, objectives ; Red : k gold, kills assists, objectives)')
 print("Résultats : ",gen_word(new_mat[1],[7,15,20,25,30,35,40]))
+
+#Un exemple d'input pour l'arbre de décision/l'algo à implémenter (cf papier)
+whatwewant = [gen_word(new_mat[i],[7,15,20,25,30,35,40,90]) for i in range(1,len(new_mat))]
+
+#Un exemple de partie longue trouvée par hasard (attention au décalage entre 'whatwewant' et 'new_mat')
+print(whatwewant[10])
+print(new_mat[10+1][7], new_mat[10+1][11])
