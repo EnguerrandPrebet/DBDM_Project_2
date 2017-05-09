@@ -18,11 +18,45 @@ matches = main_file[((main_file['Year'] == 2017) | (main_file['Year'] == 2016))
               'goldredADC', 'redSupport', 'redSupportChamp', 'goldredSupport'
               ], axis=1)
 
+matches_red = matches.drop(['bResult'], axis=1)\
+    .rename(columns={'blueTeamTag':'enemyTeam', 'rResult':'result',
+                     'redTeamTag':'Team', 
+                     'goldblue':'enemyGold',
+                     'bKills':'enemyKills', 'bTowers':'enemyTowers',
+                     'bInhibs':'enemyInhibs', 'bDragons':'enemyDragons',
+                     'bBarons':'enemyBarons', 'bHeralds':'enemyHeralds',
+                     'goldred': 'gold',
+                     'rKills': 'kills', 'rTowers': 'towers',
+                     'rInhibs': 'inhibs', 'rDragons': 'dragons',
+                     'rBarons': 'barons', 'rHeralds': 'heralds',
+                     'redBans':'bans', 'blueBans':'enemyBans'
+                     })
+matches_red['side'] = 'red'
 
+matches_red = matches_red.sort_index()
 
-#matches.to_csv('test.csv')
+matches_blue = matches.drop(['rResult'], axis=1)\
+    .rename(columns={'redTeamTag':'enemyTeam', 'bResult':'result',
+                     'blueTeamTag':'Team',
+                     'goldred':'enemyGold',
+                     'rKills':'enemyKills', 'rTowers':'enemyTowers',
+                     'rInhibs':'enemyInhibs', 'rDragons':'enemyDragons',
+                     'rBarons':'enemyBarons', 'rHeralds':'enemyHeralds',
+                     'goldblue': 'gold',
+                     'bKills': 'kills', 'bTowers': 'towers',
+                     'bInhibs': 'inhibs', 'bDragons': 'dragons',
+                     'bBarons': 'barons', 'bHeralds': 'heralds',
+                     'redBans':'bans', 'blueBans':'enemyBans'
+                     })
+matches_red['side'] = 'blue'
 
-x = gold[gold.NameType == 'golddiff'].describe().drop['std', 'count', '25%', '50%', '75%', 'max']
+matches_red = matches_red.sort_index()
+
+matches_perspective = pd.concat([matches_red, matches_blue])
+
+matches_perspective.to_csv('test.csv')
+
+"""x = gold[gold.NameType == 'golddiff'].describe().drop['std', 'count', '25%', '50%', '75%', 'max']
 x.plot.hist()
 
-plt.show()
+plt.show()"""
