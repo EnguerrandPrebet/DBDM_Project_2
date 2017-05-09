@@ -62,3 +62,7 @@ matches_perspective.to_csv('test.csv')
 x.plot.hist()
 
 plt.show()"""
+
+#Réunir par matchs-ups.
+test_group = matches_perspective.groupby(by=['Team','enemyTeam'])
+print(test_group.size().describe()) #7 games en moyenne, mediane à 5
