@@ -4,6 +4,7 @@ import numpy as np
 from ast import literal_eval
 import functools
 
+<<<<<<< HEAD
 def early_kill(minute, c):
     return str(list(filter(lambda x: len(x) > 0 and int(x[0]) < minute, literal_eval(c))))
 
@@ -102,3 +103,7 @@ if __name__ == '__main__':
     x.plot.hist()
     
     plt.show()"""
+
+    #Réunir par matchs-ups.
+    test_group = matches_perspective.groupby(by=['Team','enemyTeam'])
+    print(test_group.size().describe()) #7 games en moyenne, mediane à 5
