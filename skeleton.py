@@ -9,7 +9,9 @@ gold = pd.read_csv('goldValues.csv')
 matches = main_file[((main_file['Year'] == 2017) | (main_file['Year'] == 2016))
                     & ((main_file['League'] == 'Europe') |
                     (main_file['League'] == 'North_America') |
-                    (main_file['League'] == 'LCK')
+                    (main_file['League'] == 'LCK') |
+                    (main_file['League'] == 'Season_World_Championship') |
+                    (main_file['League'] == 'Mid-Season_Invitational')
                     )].drop(['blueTop', 'blueTopChamp', 'goldblueTop', 'blueJungle', 'blueJungleChamp', 'goldblueJungle',
               'blueMiddle', 'blueMiddleChamp', 'goldblueMiddle', 'blueADC', 'blueADCChamp',
               'goldblueADC', 'blueSupport', 'blueSupportChamp', 'goldblueSupport',
@@ -48,9 +50,9 @@ matches_blue = matches.drop(['rResult'], axis=1)\
                      'bBarons': 'barons', 'bHeralds': 'heralds',
                      'redBans':'bans', 'blueBans':'enemyBans'
                      })
-matches_red['side'] = 'blue'
+matches_blue['side'] = 'blue'
 
-matches_red = matches_red.sort_index()
+matches_blue = matches_blue.sort_index()
 
 matches_perspective = pd.concat([matches_red, matches_blue])
 
