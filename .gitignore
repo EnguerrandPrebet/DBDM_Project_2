@@ -145,6 +145,4 @@ ENV/
 # Rope project settings
 .ropeproject
 
-goldValues.csv
-LeagueofLegends.csv
-_LeagueofLegends.csv
+*.csv
