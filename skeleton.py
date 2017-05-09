@@ -4,7 +4,6 @@ import numpy as np
 from ast import literal_eval
 import functools
 
-<<<<<<< HEAD
 def early_kill(minute, c):
     return str(list(filter(lambda x: len(x) > 0 and int(x[0]) < minute, literal_eval(c))))
 
@@ -39,6 +38,36 @@ def freq_win_early_kills(matches):
     plt.show()
 
 
+
+def diff_year(matches_perspective):
+    matches_perspective['kills'] = matches_perspective['kills'].apply(literal_eval)
+    matches_perspective['enemyKills'] = matches_perspective['enemyKills'].apply(literal_eval)
+    
+    num_kills(matches_perspective)
+    num_deaths(matches_perspective)
+    print("total:",matches_perspective.describe())
+
+    match_2016 = matches_perspective[matches_perspective['Year'] == 2016]
+    match_2017 = matches_perspective[matches_perspective['Year'] == 2017]
+    print("2016:\n",match_2016.describe())
+    print("2017:\n",match_2017.describe())
+    
+def num_kills(df):
+    df['num_kills'] = df['kills'].apply(lambda x: len(x))
+    df['num_assist'] = df['kills'].apply(lambda x: sum([len(kill) - 3 for kill in x]))
+
+def num_deaths(df): #Surtout pour vérifier les valeurs obtenues avec kills
+    df['num_death'] = df['enemyKills'].apply(lambda x: len(x))
+    
+"""Incomplet mais juste pour pas que j'ai à chercher
+def unlist_kda(df,team=True,enemyTeam=True):
+    if(not team and not enemyTeam):
+        print("T'as rien compris gros !")
+    
+    if(team):
+        pd.DataFrame({'a':np.repeat(df.a.values, df.b.str.len()),
+                        'b':np.concatenate(df.b.values)})
+"""
 if __name__ == '__main__':
 
     main_file = pd.read_csv('_LeagueofLegends.csv')
@@ -95,8 +124,8 @@ if __name__ == '__main__':
 
     matches_perspective = pd.concat([matches_red, matches_blue])
 
-    freq_win_early_kills(matches_perspective)
-
+    #freq_win_early_kills(matches_perspective)
+    diff_year(matches_perspective)
     #matches_perspective.to_csv('test.csv')
 
     """x = gold[gold.NameType == 'golddiff'].describe().drop['std', 'count', '25%', '50%', '75%', 'max']
