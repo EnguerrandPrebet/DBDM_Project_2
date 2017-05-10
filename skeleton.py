@@ -127,6 +127,36 @@ def fst_objective(matches_perspective,str1,str2):
     
 #
 
+def imply_fst_obj(matches,str1,str2,str3,str4):
+    #Compute data for first objective
+    if(str1 == 'kills'):
+        fst_blood(matches)
+        matches = matches.rename(columns={'FB':'obj1','FK':'obj1a','FKenemy':'obj1e'})
+    else:
+        fst_objective(matches,str1,str2)
+        matches = matches.rename(columns={'objective':'obj1','you':'obj1a','notyou':'obj1e'})
+    
+    #Compute data for second objective
+    if(str3 == 'kills'):
+        fst_blood(matches)
+        matches = matches.rename(columns={'FB':'obj2','FK':'obj2a','FKenemy':'obj2e'})
+    else:
+        fst_objective(matches,str3,str4)
+        matches = matches.rename(columns={'objective':'obj2','you':'obj2a','notyou':'obj2e'})
+     
+    #Comparison 
+    print(matches[['result']][matches.obj1 & ~ matches.obj2].describe())
+    print(matches[['result']][matches.obj2 & ~ matches.obj1].describe())
+
+    #Implication
+    #Considering that both objectives are taken
+    matches_both = matches[matches.obj1 & matches.obj2]
+    print(matches_both[['result']].count(),matches_both[['result']].mean())
+    
+    #If the first objective is done first
+    print(matches_both[matches_both.obj1a < matches_both.obj2a][['result']].count(),matches_both[matches_both.obj1a < matches_both.obj2a][['result']].mean())
+    #Or the second
+    print(matches_both[matches_both.obj1a > matches_both.obj2a][['result']].count(),matches_both[matches_both.obj1a > matches_both.obj2a][['result']].mean())
 if __name__ == '__main__':
 
     main_file = pd.read_csv('_LeagueofLegends.csv')
@@ -187,11 +217,11 @@ if __name__ == '__main__':
     #diff_year(matches_perspective) #TODO
     #diff_champ(matches_perspective) #TODO
     #fst_blood(matches_perspective)
-    fst_objective(matches_perspective,'towers','enemyTowers') #64.3%
-    fst_objective(matches_perspective,'heralds','enemyHeralds') #66.5%
-    fst_objective(matches_perspective,'dragons','enemyDragons') #63.9%
-    fst_objective(matches_perspective,'barons','enemyBarons') #83.6%
-
+    #fst_objective(matches_perspective,'towers','enemyTowers') #64.3%
+    #fst_objective(matches_perspective,'heralds','enemyHeralds') #66.5%
+    #fst_objective(matches_perspective,'dragons','enemyDragons') #63.9%
+    #fst_objective(matches_perspective,'barons','enemyBarons') #83.6%
+    imply_fst_obj(matches_perspective,'towers','enemyTowers','dragons','enemyDragons')
     #matches_perspective.to_csv('test.csv')
 
     """x = gold[gold.NameType == 'golddiff'].describe().drop['std', 'count', '25%', '50%', '75%', 'max']
