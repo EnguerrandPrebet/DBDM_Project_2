@@ -37,7 +37,7 @@ def freq_win_early_kills(matches):
                loc='upper right')
     plt.show()
 
-
+#
 
 def diff_year(matches_perspective):
     matches_perspective['kills'] = matches_perspective['kills'].apply(literal_eval)
@@ -45,7 +45,7 @@ def diff_year(matches_perspective):
     
     num_kills(matches_perspective)
     num_deaths(matches_perspective)
-    print("total:",matches_perspective.describe())
+    print("total:\n",matches_perspective.describe())
 
     match_2016 = matches_perspective[matches_perspective['Year'] == 2016]
     match_2017 = matches_perspective[matches_perspective['Year'] == 2017]
@@ -56,10 +56,10 @@ def num_kills(df):
     df['num_kills'] = df['kills'].apply(lambda x: len(x))
     df['num_assist'] = df['kills'].apply(lambda x: sum([len(kill) - 3 for kill in x]))
 
-def num_deaths(df): #Surtout pour vérifier les valeurs obtenues avec kills
+def num_deaths(df): #Surtout pour verifier les valeurs obtenues avec kills
     df['num_death'] = df['enemyKills'].apply(lambda x: len(x))
-    
-"""Incomplet mais juste pour pas que j'ai à chercher
+
+"""Incomplet mais juste pour pas que j'ai a chercher
 def unlist_kda(df,team=True,enemyTeam=True):
     if(not team and not enemyTeam):
         print("T'as rien compris gros !")
@@ -68,6 +68,65 @@ def unlist_kda(df,team=True,enemyTeam=True):
         pd.DataFrame({'a':np.repeat(df.a.values, df.b.str.len()),
                         'b':np.concatenate(df.b.values)})
 """
+
+#
+
+def diff_champ(matches_perspective):
+    
+    match_europe = matches_perspective[matches_perspective['League'] == 'Europe']
+    match_na = matches_perspective[matches_perspective['League'] == 'North_America']
+    match_korea = matches_perspective[matches_perspective['League'] == 'LCK']
+    match_mid = matches_perspective[matches_perspective['League'] == 'Mid-Season_Invitational']
+    match_WC = matches_perspective[matches_perspective['League'] == 'Season_World_Championship']
+    
+#
+
+def fst_blood(matches_perspective):
+    matches_perspective['kills'] = matches_perspective['kills'].apply(literal_eval)
+    matches_perspective['enemyKills'] = matches_perspective['enemyKills'].apply(literal_eval)
+    
+    def func_alacon(x):
+        if(len(x[0]) != 0):
+            z = min(x,key = lambda y: y[0])
+            return z[0]
+        else:
+            return 100
+            
+    matches_perspective['FK'] = matches_perspective['kills'].apply(func_alacon)
+    matches_perspective['FKenemy'] = matches_perspective['enemyKills'].apply(func_alacon)
+    
+    matches_perspective = matches_perspective[(matches_perspective['FK'] != matches_perspective['FKenemy'])] #First blood at the same time, result unexpected 0.06 sec
+    
+    matches_perspective['FB'] = (matches_perspective.FK < matches_perspective.FKenemy)
+
+    match_get_FB = matches_perspective[matches_perspective.FB]
+    
+    print(match_get_FB.describe()) #62.9% de winrate
+    
+#
+
+def fst_objective(matches_perspective,str1,str2):
+    matches_perspective[str1] = matches_perspective[str1].apply(literal_eval)
+    matches_perspective[str2] = matches_perspective[str2].apply(literal_eval)
+    
+    def func_alacon(x):
+        if(len(x) != 0):
+            return min(x)
+        else:
+            return 100
+    matches_perspective['you'] = matches_perspective[str1].apply(func_alacon)
+    matches_perspective['notyou'] = matches_perspective[str2].apply(func_alacon)
+    
+    #matches_perspective = matches_perspective[(matches_perspective['FT'] != matches_perspective['FTenemy'])]
+    
+    matches_perspective['objective'] = (matches_perspective.you < matches_perspective.notyou)
+
+    match_got_objective = matches_perspective[matches_perspective.objective]
+    
+    print(match_got_objective.describe())
+    
+#
+
 if __name__ == '__main__':
 
     main_file = pd.read_csv('_LeagueofLegends.csv')
@@ -125,7 +184,14 @@ if __name__ == '__main__':
     matches_perspective = pd.concat([matches_red, matches_blue])
 
     #freq_win_early_kills(matches_perspective)
-    diff_year(matches_perspective)
+    #diff_year(matches_perspective) #TODO
+    #diff_champ(matches_perspective) #TODO
+    #fst_blood(matches_perspective)
+    fst_objective(matches_perspective,'towers','enemyTowers') #64.3%
+    fst_objective(matches_perspective,'heralds','enemyHeralds') #66.5%
+    fst_objective(matches_perspective,'dragons','enemyDragons') #63.9%
+    fst_objective(matches_perspective,'barons','enemyBarons') #83.6%
+
     #matches_perspective.to_csv('test.csv')
 
     """x = gold[gold.NameType == 'golddiff'].describe().drop['std', 'count', '25%', '50%', '75%', 'max']
@@ -133,6 +199,6 @@ if __name__ == '__main__':
     
     plt.show()"""
 
-    #Réunir par matchs-ups.
+    #Reunir par matchs-ups.
     test_group = matches_perspective.groupby(by=['Team','enemyTeam'])
-    print(test_group.size().describe()) #7 games en moyenne, mediane à 5
+    #print(test_group.size().describe()) #7 games en moyenne, mediane a 5
