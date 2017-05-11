@@ -82,8 +82,6 @@ def diff_champ(matches_perspective):
 #
 
 def fst_blood(matches_perspective):
-    matches_perspective['kills'] = matches_perspective['kills'].apply(literal_eval)
-    matches_perspective['enemyKills'] = matches_perspective['enemyKills'].apply(literal_eval)
     
     def func_alacon(x):
         if(len(x[0]) != 0):
@@ -95,19 +93,17 @@ def fst_blood(matches_perspective):
     matches_perspective['FK'] = matches_perspective['kills'].apply(func_alacon)
     matches_perspective['FKenemy'] = matches_perspective['enemyKills'].apply(func_alacon)
     
-    matches_perspective = matches_perspective[(matches_perspective['FK'] != matches_perspective['FKenemy'])] #First blood at the same time, result unexpected 0.06 sec
-    
     matches_perspective['FB'] = (matches_perspective.FK < matches_perspective.FKenemy)
-
-    match_get_FB = matches_perspective[matches_perspective.FB]
     
-    print(match_get_FB.describe()) #62.9% de winrate
+    matches_perspective2 = matches_perspective[(matches_perspective['FK'] != matches_perspective['FKenemy'])] #First blood at the same time, result unexpected 0.06 sec
+    
+    match_get_FB = matches_perspective2[matches_perspective2.FB]
+    
+    return match_get_FB #62.9% de winrate
     
 #
 
 def fst_objective(matches_perspective,str1,str2):
-    matches_perspective[str1] = matches_perspective[str1].apply(literal_eval)
-    matches_perspective[str2] = matches_perspective[str2].apply(literal_eval)
     
     def func_alacon(x):
         if(len(x) != 0):
@@ -123,7 +119,7 @@ def fst_objective(matches_perspective,str1,str2):
 
     match_got_objective = matches_perspective[matches_perspective.objective]
     
-    print(match_got_objective.describe())
+    return match_got_objective
     
 #
 
@@ -157,6 +153,8 @@ def imply_fst_obj(matches,str1,str2,str3,str4):
     print(matches_both[matches_both.obj1a < matches_both.obj2a][['result']].count(),matches_both[matches_both.obj1a < matches_both.obj2a][['result']].mean())
     #Or the second
     print(matches_both[matches_both.obj1a > matches_both.obj2a][['result']].count(),matches_both[matches_both.obj1a > matches_both.obj2a][['result']].mean())
+    
+
 if __name__ == '__main__':
 
     main_file = pd.read_csv('_LeagueofLegends.csv')
@@ -216,12 +214,29 @@ if __name__ == '__main__':
     #freq_win_early_kills(matches_perspective)
     #diff_year(matches_perspective) #TODO
     #diff_champ(matches_perspective) #TODO
-    #fst_blood(matches_perspective)
-    #fst_objective(matches_perspective,'towers','enemyTowers') #64.3%
-    #fst_objective(matches_perspective,'heralds','enemyHeralds') #66.5%
-    #fst_objective(matches_perspective,'dragons','enemyDragons') #63.9%
-    #fst_objective(matches_perspective,'barons','enemyBarons') #83.6%
-    imply_fst_obj(matches_perspective,'towers','enemyTowers','dragons','enemyDragons')
+    
+    paires = [('kills','enemyKills'),('towers','enemyTowers'),('heralds','enemyHeralds'),('dragons','enemyDragons'),('barons','enemyBarons'),('inhibs','enemyInhibs')]
+    for paire in paires:
+        matches_perspective[paire[0]] = matches_perspective[paire[0]].apply(literal_eval)
+        matches_perspective[paire[1]] = matches_perspective[paire[1]].apply(literal_eval)
+        
+        if(paire[0] == 'kills'):
+            print(fst_blood(matches_perspective))
+        else:
+            print(fst_objective(matches_perspective,*paire))
+            
+    #print(fst_objective(matches_perspective,'towers','enemyTowers')) #64.3%
+    #print(fst_objective(matches_perspective,'heralds','enemyHeralds')) #66.5%
+    #print(fst_objective(matches_perspective,'dragons','enemyDragons')) #63.9%
+    #print(fst_objective(matches_perspective,'barons','enemyBarons')) #83.6%
+    #print(fst_objective(matches_perspective,'inhibs','enemyInhibs')) #90,6%
+    
+    for paire_1 in paires:
+        for paire_2 in paires:
+            if(paire_1 != paire_2):
+                print(imply_fst_obj(matches_perspective,*paire_1,*paire_2))
+               
+    #print(imply_fst_obj(matches_perspective,'towers','enemyTowers','dragons','enemyDragons')
     #matches_perspective.to_csv('test.csv')
 
     """x = gold[gold.NameType == 'golddiff'].describe().drop['std', 'count', '25%', '50%', '75%', 'max']
