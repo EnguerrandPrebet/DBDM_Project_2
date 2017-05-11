@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from ast import literal_eval
 import functools
+import seaborn as sn
 
 def early_kill(minute, c):
     return str(list(filter(lambda x: len(x) > 0 and int(x[0]) < minute, literal_eval(c))))
@@ -94,11 +95,11 @@ def fst_blood(matches_perspective):
     matches_perspective['FKenemy'] = matches_perspective['enemyKills'].apply(func_alacon)
     
     matches_perspective['FB'] = (matches_perspective.FK < matches_perspective.FKenemy)
-    
+
     matches_perspective2 = matches_perspective[(matches_perspective['FK'] != matches_perspective['FKenemy'])] #First blood at the same time, result unexpected 0.06 sec
     
     match_get_FB = matches_perspective2[matches_perspective2.FB]
-    
+
     return match_get_FB #62.9% de winrate
     
 #
@@ -155,6 +156,25 @@ def imply_fst_obj(matches,str1,str2,str3,str4):
     
     return result1,result2
     
+
+def plot_obj_winrate(matches_perspective):
+
+    fb = fst_blood(matches_perspective)['result']
+    towers = fst_objective(matches_perspective,'towers','enemyTowers')['result'] #64.3%
+    heralds = fst_objective(matches_perspective,'heralds','enemyHeralds')['result'] #66.5%
+    drakes = fst_objective(matches_perspective,'dragons','enemyDragons')['result'] #63.9%
+    barons = fst_objective(matches_perspective,'barons','enemyBarons')['result'] #83.6%
+
+    df = pd.DataFrame()
+
+    df['fb'] = fb
+    df['towers'] = towers
+    df['heralds'] = heralds
+    df['drakes'] = drakes
+    df['barons'] = barons
+
+    df.mean().apply(lambda x: x * 100).plot(kind='bar')
+    plt.show()
 
 if __name__ == '__main__':
 
@@ -215,7 +235,7 @@ if __name__ == '__main__':
     #freq_win_early_kills(matches_perspective)
     #diff_year(matches_perspective) #TODO
     #diff_champ(matches_perspective) #TODO
-    
+
     paires = [('kills','enemyKills'),('towers','enemyTowers'),('heralds','enemyHeralds'),('dragons','enemyDragons'),('barons','enemyBarons'),('inhibs','enemyInhibs')]
     for paire in paires:
         matches_perspective[paire[0]] = matches_perspective[paire[0]].apply(literal_eval)
@@ -254,6 +274,9 @@ if __name__ == '__main__':
     print(np.matrix(t2))
     #print(imply_fst_obj(matches_perspective,'towers','enemyTowers','dragons','enemyDragons')
     #matches_perspective.to_csv('test.csv')
+
+    freq_win_early_kills(matches_perspective)
+    plot_obj_winrate(matches_perspective)
 
     """x = gold[gold.NameType == 'golddiff'].describe().drop['std', 'count', '25%', '50%', '75%', 'max']
     x.plot.hist()
