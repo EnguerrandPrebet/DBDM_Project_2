@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from ast import literal_eval
 import functools
+import seaborn as sn
 
 def early_kill(minute, c):
     return str(list(filter(lambda x: len(x) > 0 and int(x[0]) < minute, literal_eval(c))))
@@ -101,7 +102,7 @@ def fst_blood(matches_perspective):
 
     match_get_FB = matches_perspective[matches_perspective.FB]
     
-    print(match_get_FB.describe()) #62.9% de winrate
+    return match_get_FB #62.9% de winrate
     
 #
 
@@ -123,7 +124,7 @@ def fst_objective(matches_perspective,str1,str2):
 
     match_got_objective = matches_perspective[matches_perspective.objective]
     
-    print(match_got_objective.describe())
+    return match_got_objective
     
 #
 
@@ -157,6 +158,27 @@ def imply_fst_obj(matches,str1,str2,str3,str4):
     print(matches_both[matches_both.obj1a < matches_both.obj2a][['result']].count(),matches_both[matches_both.obj1a < matches_both.obj2a][['result']].mean())
     #Or the second
     print(matches_both[matches_both.obj1a > matches_both.obj2a][['result']].count(),matches_both[matches_both.obj1a > matches_both.obj2a][['result']].mean())
+
+
+def plot_obj_winrate(matches_perspective):
+
+    fb = fst_blood(matches_perspective)['result']
+    towers = fst_objective(matches_perspective,'towers','enemyTowers')['result'] #64.3%
+    heralds = fst_objective(matches_perspective,'heralds','enemyHeralds')['result'] #66.5%
+    drakes = fst_objective(matches_perspective,'dragons','enemyDragons')['result'] #63.9%
+    barons = fst_objective(matches_perspective,'barons','enemyBarons')['result'] #83.6%
+
+    df = pd.DataFrame()
+
+    df['fb'] = fb
+    df['towers'] = towers
+    df['heralds'] = heralds
+    df['drakes'] = drakes
+    df['barons'] = barons
+
+    df.mean().apply(lambda x: x * 100).plot(kind='bar')
+    plt.show()
+
 if __name__ == '__main__':
 
     main_file = pd.read_csv('_LeagueofLegends.csv')
@@ -221,8 +243,11 @@ if __name__ == '__main__':
     #fst_objective(matches_perspective,'heralds','enemyHeralds') #66.5%
     #fst_objective(matches_perspective,'dragons','enemyDragons') #63.9%
     #fst_objective(matches_perspective,'barons','enemyBarons') #83.6%
-    imply_fst_obj(matches_perspective,'towers','enemyTowers','dragons','enemyDragons')
+    #imply_fst_obj(matches_perspective,'towers','enemyTowers','dragons','enemyDragons')
     #matches_perspective.to_csv('test.csv')
+
+    freq_win_early_kills(matches_perspective)
+    plot_obj_winrate(matches_perspective)
 
     """x = gold[gold.NameType == 'golddiff'].describe().drop['std', 'count', '25%', '50%', '75%', 'max']
     x.plot.hist()
