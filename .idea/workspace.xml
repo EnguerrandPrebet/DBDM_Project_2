@@ -28,8 +28,8 @@
       <file leaf-file-name="skeleton.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/skeleton.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="53">
-              <caret line="235" column="64" lean-forward="true" selection-start-line="235" selection-start-column="64" selection-end-line="235" selection-end-column="64" />
+            <state relative-caret-position="60">
+              <caret line="234" column="42" lean-forward="false" selection-start-line="234" selection-start-column="42" selection-end-line="234" selection-end-column="42" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
               </folding>
@@ -310,8 +310,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/skeleton.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="53">
-          <caret line="235" column="64" lean-forward="true" selection-start-line="235" selection-start-column="64" selection-end-line="235" selection-end-column="64" />
+        <state relative-caret-position="60">
+          <caret line="234" column="42" lean-forward="false" selection-start-line="234" selection-start-column="42" selection-end-line="234" selection-end-column="42" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
           </folding>
