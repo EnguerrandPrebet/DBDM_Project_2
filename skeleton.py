@@ -141,18 +141,19 @@ def imply_fst_obj(matches,str1,str2,str3,str4):
         matches = matches.rename(columns={'objective':'obj2','you':'obj2a','notyou':'obj2e'})
      
     #Comparison 
-    print(matches[['result']][matches.obj1 & ~ matches.obj2].describe())
-    print(matches[['result']][matches.obj2 & ~ matches.obj1].describe())
-
+    result1 = matches[['result']][matches.obj1 & ~ matches.obj2].mean().tolist()[0]
+    
     #Implication
     #Considering that both objectives are taken
     matches_both = matches[matches.obj1 & matches.obj2]
-    print(matches_both[['result']].count(),matches_both[['result']].mean())
+    #print(matches_both[['result']].count(),matches_both[['result']].mean())
     
     #If the first objective is done first
-    print(matches_both[matches_both.obj1a < matches_both.obj2a][['result']].count(),matches_both[matches_both.obj1a < matches_both.obj2a][['result']].mean())
-    #Or the second
-    print(matches_both[matches_both.obj1a > matches_both.obj2a][['result']].count(),matches_both[matches_both.obj1a > matches_both.obj2a][['result']].mean())
+    result2 = ((matches_both[matches_both.obj1a < matches_both.obj2a][['result']].count()/matches_both[['result']].count()).tolist()[0])
+    """#Or the second
+    print(matches_both[matches_both.obj1a > matches_both.obj2a][['result']].count(),matches_both[matches_both.obj1a > matches_both.obj2a][['result']].mean())"""
+    
+    return result1,result2
     
 
 if __name__ == '__main__':
@@ -221,9 +222,9 @@ if __name__ == '__main__':
         matches_perspective[paire[1]] = matches_perspective[paire[1]].apply(literal_eval)
         
         if(paire[0] == 'kills'):
-            print(fst_blood(matches_perspective))
+            print(paire[0],fst_blood(matches_perspective)[['result']].mean().tolist()[0])
         else:
-            print(fst_objective(matches_perspective,*paire))
+            print(paire[0],fst_objective(matches_perspective,*paire)[['result']].mean().tolist()[0])
             
     #print(fst_objective(matches_perspective,'towers','enemyTowers')) #64.3%
     #print(fst_objective(matches_perspective,'heralds','enemyHeralds')) #66.5%
@@ -231,11 +232,26 @@ if __name__ == '__main__':
     #print(fst_objective(matches_perspective,'barons','enemyBarons')) #83.6%
     #print(fst_objective(matches_perspective,'inhibs','enemyInhibs')) #90,6%
     
+    t,t2 = [],[]
     for paire_1 in paires:
+        t.append([])
+        t2.append([])
         for paire_2 in paires:
             if(paire_1 != paire_2):
-                print(imply_fst_obj(matches_perspective,*paire_1,*paire_2))
-               
+                x = imply_fst_obj(matches_perspective,*paire_1,*paire_2)
+                print(paire_1[0],paire_2[0],x)
+                t[-1].append(int(x[0]*10000)/100.0)
+                t2[-1].append(int(x[1]*10000)/100.0)
+            else:
+                t[-1].append('/////')
+                t2[-1].append('/////')
+                
+    for i in range(len(t)):
+        for j in range(len(t[i])):
+            if(i != j):
+                print(t[i][j] + t[j][i])
+    print(np.matrix(t))
+    print(np.matrix(t2))
     #print(imply_fst_obj(matches_perspective,'towers','enemyTowers','dragons','enemyDragons')
     #matches_perspective.to_csv('test.csv')
 
