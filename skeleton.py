@@ -143,7 +143,6 @@ def imply_fst_obj(matches,str1,str2,str3,str4):
      
     #Comparison 
     result1 = matches[['result']][matches.obj1 & ~ matches.obj2].mean().tolist()[0]
-    
     #Implication
     #Considering that both objectives are taken
     matches_both = matches[matches.obj1 & matches.obj2]
@@ -164,7 +163,7 @@ def plot_obj_winrate(matches_perspective):
     heralds = fst_objective(matches_perspective,'heralds','enemyHeralds')['result'] #66.5%
     drakes = fst_objective(matches_perspective,'dragons','enemyDragons')['result'] #63.9%
     barons = fst_objective(matches_perspective,'barons','enemyBarons')['result'] #83.6%
-
+    inhibs = fst_objective(matches_perspective,'inhibs','enemyInhibs')['result']
     df = pd.DataFrame()
 
     df['fb'] = fb
@@ -172,9 +171,59 @@ def plot_obj_winrate(matches_perspective):
     df['heralds'] = heralds
     df['drakes'] = drakes
     df['barons'] = barons
-
+    df['inhibs'] = inhibs
     df.mean().apply(lambda x: x * 100).plot(kind='bar')
     plt.show()
+
+## Predictions sur 5 minutes
+
+def fst_blood_2(matches):#Extraire les first blood qui a fait le first blood à moins de 10 minutes et s'il a été fait avant 5 minutes
+    
+    def func_alacon(x):
+        if(len(x[0]) != 0):
+            z = min(x,key = lambda y: y[0])
+            return z[0]
+        else:
+            return 100
+            
+    matches['FK'] = matches['kills'].apply(func_alacon)
+    matches['FKenemy'] = matches['enemyKills'].apply(func_alacon)
+    
+    matches['FB'] = matches.apply(lambda x: ((x.FK < 10) & (x.FK < x.FKenemy)) - ((x.FKenemy < 10) & (x.FKenemy < x.FK)), axis = 1)
+    
+    matches['FB_early'] = ((matches.FK < 5) | (matches.FKenemy < 5))
+     
+    matches2 = matches[(matches['FK'] != matches['FKenemy'])] #First blood at the same time, result unexpected 0.06 sec
+    
+
+    return matches2
+
+def gold_diff_extract(matches,gold):#Extraction de la différence de gold à 10 minutes, et distinction sur l'écart de 400 gold
+    gold_10min = gold['min_10'][(gold['NameType'] == 'goldblue') |(gold['NameType'] == 'goldred')]
+    print(gold_10min.describe())
+    
+    gold_400 = gold['min_10'][gold['NameType'] == 'golddiff'].apply(abs)
+    gold_400 = gold_400[gold_400 > 400]
+    print(gold_400.describe())
+    
+    gold = gold[['MatchHistory','min_10']][gold['NameType'] == 'golddiff']
+    gold['GD'] = gold['min_10'].apply(lambda x: (x > 400) - (x < -400) + (x > 900) - (x < -900))
+    fusion = pd.merge(matches,gold,how='left',on='MatchHistory')
+    fusion['GD'] = fusion.apply(lambda x: (1 - 2*(x.side == 'red')) * x.GD, axis = 1)
+    
+    return fusion
+    
+def predictions(matches,gold): #Prédictions à partir des extractions
+    matches = fst_blood_2(matches)
+    
+    predict1 = fusion.groupby(['FB','FB_early','GD'])
+    print(predict1['result'].describe())
+    predict2 = fusion.groupby(['FB','GD'])
+    print(predict2['result'].describe())
+    
+    predict3 = fusion.groupby(['GD'])
+    print(predict3['result'].describe())
+
 
 if __name__ == '__main__':
 
@@ -231,7 +280,8 @@ if __name__ == '__main__':
     matches_blue = matches_blue.sort_index()
 
     matches_perspective = pd.concat([matches_red, matches_blue])
-
+    
+    
     #freq_win_early_kills(matches_perspective)
     #diff_year(matches_perspective) #TODO
     #diff_champ(matches_perspective) #TODO
@@ -245,13 +295,15 @@ if __name__ == '__main__':
             print(paire[0],fst_blood(matches_perspective)[['result']].mean().tolist()[0])
         else:
             print(paire[0],fst_objective(matches_perspective,*paire)[['result']].mean().tolist()[0])
+    
+    predictions(matches_perspective,gold)
             
     #print(fst_objective(matches_perspective,'towers','enemyTowers')) #64.3%
     #print(fst_objective(matches_perspective,'heralds','enemyHeralds')) #66.5%
     #print(fst_objective(matches_perspective,'dragons','enemyDragons')) #63.9%
     #print(fst_objective(matches_perspective,'barons','enemyBarons')) #83.6%
     #print(fst_objective(matches_perspective,'inhibs','enemyInhibs')) #90,6%
-    
+    """
     t,t2 = [],[]
     for paire_1 in paires:
         t.append([])
@@ -266,17 +318,13 @@ if __name__ == '__main__':
                 t[-1].append('/////')
                 t2[-1].append('/////')
                 
-    for i in range(len(t)):
-        for j in range(len(t[i])):
-            if(i != j):
-                print(t[i][j] + t[j][i])
     print(np.matrix(t))
-    print(np.matrix(t2))
+    print(np.matrix(t2))"""
     #print(imply_fst_obj(matches_perspective,'towers','enemyTowers','dragons','enemyDragons')
     #matches_perspective.to_csv('test.csv')
 
-    freq_win_early_kills(matches_perspective)
-    plot_obj_winrate(matches_perspective)
+    #freq_win_early_kills(matches_perspective)
+    #plot_obj_winrate(matches_perspective)
 
     """x = gold[gold.NameType == 'golddiff'].describe().drop['std', 'count', '25%', '50%', '75%', 'max']
     x.plot.hist()
