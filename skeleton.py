@@ -192,11 +192,11 @@ def imply_fst_obj(matches,str1,str2,str3,str4):#Comparing 2 objectives
     else:
         result2 =(matches_both[(matches_both.obj2) & (matches_both.obj1a < matches_both.obj2a)]['result'].count() / matches_both['result'].count())
     
-    return result1,result2, matches_both['result'].count()/matches['result'].count()
+    return result1, matches['result'][matches.obj1 & ~ matches.obj2].count()/matches['result'].count(), result2, matches_both['result'].count()/matches['result'].count()
     
 def implications(matches, paires):#Draw conclusions from the function above
 
-    t,t2,t3 = [[0 for j in range(len(paires))] for i in range(len(paires))], [[0 for j in range(len(paires))] for i in range(len(paires))], [[0 for j in range(len(paires))] for i in range(len(paires))]
+    t,t2,t3, t4 = [[0 for j in range(len(paires))] for i in range(len(paires))], [[0 for j in range(len(paires))] for i in range(len(paires))], [[0 for j in range(len(paires))] for i in range(len(paires))], [[0 for j in range(len(paires))] for i in range(len(paires))]
     for (i,paire_1) in enumerate(paires):
         for (j,paire_2) in enumerate(paires):
             if(i != j):
@@ -204,42 +204,58 @@ def implications(matches, paires):#Draw conclusions from the function above
                 t[i][j] = int(x[0]*10000)/100.0
                 t2[i][j] = int(x[1]*10000)/100.0
                 t3[i][j] = int(x[2]*10000)/100.0
+                t4[i][j] = int(x[3]*10000)/100.0
                 if(t[i][j] < 0):
                     t[i][j] = 'X'
-                if(t2[i][j] < 0):
-                    t2[i][j] = 'X'
+                if(t3[i][j] < 0):
+                    t3[i][j] = 'X'
                 
             else:
                 t[i][j] = '\ '
                 t2[i][j] = '\ '
                 t3[i][j] = '\ '
+                t4[i][j] = '\ '
+                
     fig,ax = plt.subplots()
-	table = ax.table(cellText=t, cellLoc='center', rowLabels=[x[0] for x in paires], colLabels=[x[0] for x in paires], loc='center')
+	table = ax.table(cellText=[[x[0] for x in paires]] + t, cellLoc='center', rowLabels=['A\ B']+[x[0] for x in paires], loc='center')
     ax.axis('tight')
     ax.axis('off')
+    plt.title('Win rate when one team has objective A and the enemy team objective B', loc = 'left')
 	ax.xaxis.set_visible(False)
     ax.yaxis.set_visible(False)
     
     fig.show()
     
     fig2,ax2 = plt.subplots()
-	table2 = ax2.table(cellText=t2, cellLoc='center', rowLabels=[x[0] for x in paires], colLabels=[x[0] for x in paires], loc='center')
+	table2 = ax2.table(cellText=[[x[0] for x in paires]] + t2, cellLoc='center', rowLabels=['A\ B']+[x[0] for x in paires], loc='center')
 	
 	ax2.axis('tight')
     ax2.axis('off')
+    plt.title('Frequency of one team having objective A and the enemy team objective B', loc = 'left')
 	ax2.xaxis.set_visible(False)
     ax2.yaxis.set_visible(False)
 
 	fig2.show()
 	
     fig3,ax3 = plt.subplots()
-	table3 = ax3.table(cellText=t3, cellLoc='center', rowLabels=[x[0] for x in paires], colLabels=[x[0] for x in paires], loc='center')
+	table3 = ax3.table(cellText=[[x[0] for x in paires]] + t3, cellLoc='center', rowLabels=['A\ B']+[x[0] for x in paires], loc='center')
 	ax3.axis('tight')
     ax3.axis('off')
+    plt.title('Frequency of one team having objective A knowing that it is taken after\n objective B got taken by that team', loc = 'left')
 	ax3.xaxis.set_visible(False)
     ax3.yaxis.set_visible(False)
 
 	fig3.show()
+	
+    fig4,ax4 = plt.subplots()
+	table4 = ax4.table(cellText=[[x[0] for x in paires]] + t4, cellLoc='center', rowLabels=['A\ B']+[x[0] for x in paires], loc='center')
+	plt.title('Frequency of one team having objective A before anyone get objective B', loc = 'left')
+	ax4.axis('tight')
+    ax4.axis('off')
+    ax4.xaxis.set_visible(False)
+    ax4.yaxis.set_visible(False)
+
+	fig4.show()
 
 
 ## Predictions sur 5 minutes
@@ -298,6 +314,7 @@ def looking_at_gold(fusion):#Etude plus précise de l'intérêt de l'or
     y3 = [fusion[(fusion['min_10'] > i*100) & (fusion['FB']==1)]['result'].mean() for i in range(0,30)]
     y4 = [fusion[(fusion['min_10'] > i*100) & (fusion['FB']==0)]['result'].mean() for i in range(0,30)]
     y5 = [fusion[(fusion['min_10'] > i*100) & (fusion['FB']==-1)]['result'].mean() for i in range(0,30)]
+    y6 = [y[i]*y2[i] + 0.5*(1-y[i]) for i in range(len(y))]
     plt.figure()
     plt.xlabel('Lower bound on gold differential after 10 minutes')
     plt.plot(x,y, label='Games')
@@ -305,8 +322,10 @@ def looking_at_gold(fusion):#Etude plus précise de l'intérêt de l'or
     #plt.plot(x,y3, label='Winrate with FB')
     #plt.plot(x,y4, label='Winrate wo FB')
     #plt.plot(x,y5, label='Winrate when nothing happens')
+    plt.plot(x,y6, label='Accuracy')
     plt.legend()
     plt.show()
+    print(y6[:6])
     
 def predictions(matches,gold): #Prédictions à partir des extractions
     matches = fst_blood_2(matches)
