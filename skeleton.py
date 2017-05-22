@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from ast import literal_eval
 import functools
-import seaborn as sn
+#import seaborn as sn
 
 def early_kill(minute, c):
     return str(list(filter(lambda x: len(x) > 0 and int(x[0]) < minute, literal_eval(c))))
@@ -31,6 +31,7 @@ def freq_win_early_kills(matches):
     abs, ord = list(df), df.iloc[[0]].values.tolist()[0]
 
     #plt.scatter(x=abs, y=ord)
+    plt.figure()
     plt.plot(abs, ord, '-o')
     plt.xlabel('Game time')
     plt.ylabel('Win rate')
@@ -39,20 +40,7 @@ def freq_win_early_kills(matches):
     plt.show()
 
 #
-
-def diff_year(matches_perspective):
-    matches_perspective['kills'] = matches_perspective['kills'].apply(literal_eval)
-    matches_perspective['enemyKills'] = matches_perspective['enemyKills'].apply(literal_eval)
-    
-    num_kills(matches_perspective)
-    num_deaths(matches_perspective)
-    print("total:\n",matches_perspective.describe())
-
-    match_2016 = matches_perspective[matches_perspective['Year'] == 2016]
-    match_2017 = matches_perspective[matches_perspective['Year'] == 2017]
-    print("2016:\n",match_2016.describe())
-    print("2017:\n",match_2017.describe())
-    
+  
 def num_kills(df):
     df['num_kills'] = df['kills'].apply(lambda x: len(x))
     df['num_assist'] = df['kills'].apply(lambda x: sum([len(kill) - 3 for kill in x]))
@@ -60,26 +48,8 @@ def num_kills(df):
 def num_deaths(df): #Surtout pour verifier les valeurs obtenues avec kills
     df['num_death'] = df['enemyKills'].apply(lambda x: len(x))
 
-"""Incomplet mais juste pour pas que j'ai a chercher
-def unlist_kda(df,team=True,enemyTeam=True):
-    if(not team and not enemyTeam):
-        print("T'as rien compris gros !")
-    
-    if(team):
-        pd.DataFrame({'a':np.repeat(df.a.values, df.b.str.len()),
-                        'b':np.concatenate(df.b.values)})
-"""
 
-#
 
-def diff_champ(matches_perspective):
-    
-    match_europe = matches_perspective[matches_perspective['League'] == 'Europe']
-    match_na = matches_perspective[matches_perspective['League'] == 'North_America']
-    match_korea = matches_perspective[matches_perspective['League'] == 'LCK']
-    match_mid = matches_perspective[matches_perspective['League'] == 'Mid-Season_Invitational']
-    match_WC = matches_perspective[matches_perspective['League'] == 'Season_World_Championship']
-    
 #
 
 def fst_blood(matches_perspective):
@@ -96,11 +66,11 @@ def fst_blood(matches_perspective):
     
     matches_perspective['FB'] = (matches_perspective.FK < matches_perspective.FKenemy)
 
-    matches_perspective2 = matches_perspective[(matches_perspective['FK'] != matches_perspective['FKenemy'])] #First blood at the same time, result unexpected 0.06 sec
+    matches2 = matches_perspective[(matches_perspective['FK'] != matches_perspective['FKenemy'])] #First blood at the same time, result unexpected 0.06 sec
     
-    match_get_FB = matches_perspective2[matches_perspective2.FB]
+    match_get_FB = matches2[matches2.FB]
 
-    return match_get_FB #62.9% de winrate
+    return matches2, match_get_FB #62.9% de winrate
     
 #
 
@@ -114,31 +84,31 @@ def fst_objective(matches_perspective,str1,str2):
     matches_perspective['you'] = matches_perspective[str1].apply(func_alacon)
     matches_perspective['notyou'] = matches_perspective[str2].apply(func_alacon)
     
-    #matches_perspective = matches_perspective[(matches_perspective['FT'] != matches_perspective['FTenemy'])]
+    matches_perspective = matches_perspective[(matches_perspective['you'] != matches_perspective['notyou'])]
     
     matches_perspective['objective'] = (matches_perspective.you < matches_perspective.notyou)
 
     match_got_objective = matches_perspective[matches_perspective.objective]
     
-    return match_got_objective
+    return matches_perspective, match_got_objective
     
 #
 
 def imply_fst_obj(matches,str1,str2,str3,str4):
     #Compute data for first objective
     if(str1 == 'kills'):
-        fst_blood(matches)
+        matches = fst_blood(matches)[0]
         matches = matches.rename(columns={'FB':'obj1','FK':'obj1a','FKenemy':'obj1e'})
     else:
-        fst_objective(matches,str1,str2)
+        matches = fst_objective(matches,str1,str2)[0]
         matches = matches.rename(columns={'objective':'obj1','you':'obj1a','notyou':'obj1e'})
     
     #Compute data for second objective
     if(str3 == 'kills'):
-        fst_blood(matches)
+        matches = fst_blood(matches)[0]
         matches = matches.rename(columns={'FB':'obj2','FK':'obj2a','FKenemy':'obj2e'})
     else:
-        fst_objective(matches,str3,str4)
+        matches = fst_objective(matches,str3,str4)[0]
         matches = matches.rename(columns={'objective':'obj2','you':'obj2a','notyou':'obj2e'})
      
     #Comparison 
@@ -150,28 +120,21 @@ def imply_fst_obj(matches,str1,str2,str3,str4):
     
     #If the first objective is done first
     result2 = ((matches_both[matches_both.obj1a < matches_both.obj2a][['result']].count()/matches_both[['result']].count()).tolist()[0])
-    """#Or the second
-    print(matches_both[matches_both.obj1a > matches_both.obj2a][['result']].count(),matches_both[matches_both.obj1a > matches_both.obj2a][['result']].mean())"""
     
     return result1,result2
     
 
-def plot_obj_winrate(matches_perspective):
-
-    fb = fst_blood(matches_perspective)['result']
-    towers = fst_objective(matches_perspective,'towers','enemyTowers')['result'] #64.3%
-    heralds = fst_objective(matches_perspective,'heralds','enemyHeralds')['result'] #66.5%
-    drakes = fst_objective(matches_perspective,'dragons','enemyDragons')['result'] #63.9%
-    barons = fst_objective(matches_perspective,'barons','enemyBarons')['result'] #83.6%
-    inhibs = fst_objective(matches_perspective,'inhibs','enemyInhibs')['result']
-    df = pd.DataFrame()
-
-    df['fb'] = fb
-    df['towers'] = towers
-    df['heralds'] = heralds
-    df['drakes'] = drakes
-    df['barons'] = barons
-    df['inhibs'] = inhibs
+def plot_obj_winrate(matches_perspective,paires):
+	
+	df = pd.DataFrame()
+	
+	for paire in paires:
+        if(paire[0] == 'kills'):
+            df['fb'] = fst_blood(matches_perspective)[1]['result']
+        else:
+            df[paire[0]] = fst_objective(matches_perspective,*paire)[1]['result']
+    
+    plt.figure()
     df.mean().apply(lambda x: x * 100).plot(kind='bar')
     plt.show()
 
@@ -195,7 +158,6 @@ def fst_blood_2(matches):#Extraire les first blood qui a fait le first blood à 
      
     matches2 = matches[(matches['FK'] != matches['FKenemy'])] #First blood at the same time, result unexpected 0.06 sec
     
-
     return matches2
 
 def gold_diff_extract(matches,gold):#Extraction de la différence de gold à 10 minutes, et distinction sur l'écart de 400 gold
@@ -216,6 +178,8 @@ def gold_diff_extract(matches,gold):#Extraction de la différence de gold à 10 
 def predictions(matches,gold): #Prédictions à partir des extractions
     matches = fst_blood_2(matches)
     
+    fusion = gold_diff_extract(matches,gold)
+    
     predict1 = fusion.groupby(['FB','FB_early','GD'])
     print(predict1['result'].describe())
     predict2 = fusion.groupby(['FB','GD'])
@@ -225,10 +189,9 @@ def predictions(matches,gold): #Prédictions à partir des extractions
     print(predict3['result'].describe())
 
 
-if __name__ == '__main__':
-
+def init():
     main_file = pd.read_csv('_LeagueofLegends.csv')
-    match_players = pd.read_csv('LeagueofLegends.csv')
+    #match_players = pd.read_csv('LeagueofLegends.csv')
     gold = pd.read_csv('goldValues.csv')
 
     matches = main_file[((main_file['Year'] == 2017) | (main_file['Year'] == 2016))
@@ -281,51 +244,67 @@ if __name__ == '__main__':
 
     matches_perspective = pd.concat([matches_red, matches_blue])
     
-    
-    #freq_win_early_kills(matches_perspective)
-    #diff_year(matches_perspective) #TODO
-    #diff_champ(matches_perspective) #TODO
+	return matches_perspective, gold
 
-    paires = [('kills','enemyKills'),('towers','enemyTowers'),('heralds','enemyHeralds'),('dragons','enemyDragons'),('barons','enemyBarons'),('inhibs','enemyInhibs')]
+def eval_list(matches, paires):
     for paire in paires:
         matches_perspective[paire[0]] = matches_perspective[paire[0]].apply(literal_eval)
         matches_perspective[paire[1]] = matches_perspective[paire[1]].apply(literal_eval)
         
-        if(paire[0] == 'kills'):
-            print(paire[0],fst_blood(matches_perspective)[['result']].mean().tolist()[0])
-        else:
-            print(paire[0],fst_objective(matches_perspective,*paire)[['result']].mean().tolist()[0])
+
+	
     
-    predictions(matches_perspective,gold)
-            
-    #print(fst_objective(matches_perspective,'towers','enemyTowers')) #64.3%
-    #print(fst_objective(matches_perspective,'heralds','enemyHeralds')) #66.5%
-    #print(fst_objective(matches_perspective,'dragons','enemyDragons')) #63.9%
-    #print(fst_objective(matches_perspective,'barons','enemyBarons')) #83.6%
-    #print(fst_objective(matches_perspective,'inhibs','enemyInhibs')) #90,6%
-    """
-    t,t2 = [],[]
-    for paire_1 in paires:
-        t.append([])
-        t2.append([])
-        for paire_2 in paires:
-            if(paire_1 != paire_2):
+def implications(matches, paires):
+
+    t,t2 = [[0 for j in range(len(paires))] for i in range(len(paires))], [[0 for j in range(len(paires))] for i in range(len(paires))]
+    for (i,paire_1) in enumerate(paires):
+        for (j,paire_2) in enumerate(paires):
+            if(i != j):
                 x = imply_fst_obj(matches_perspective,*paire_1,*paire_2)
-                print(paire_1[0],paire_2[0],x)
-                t[-1].append(int(x[0]*10000)/100.0)
-                t2[-1].append(int(x[1]*10000)/100.0)
+                t[i][j] = int(x[0]*10000)/100.0
+                t2[i][j] = int(x[1]*10000)/100.0
             else:
-                t[-1].append('/////')
-                t2[-1].append('/////')
-                
-    print(np.matrix(t))
-    print(np.matrix(t2))"""
-    #print(imply_fst_obj(matches_perspective,'towers','enemyTowers','dragons','enemyDragons')
+                t[i][j] = '\ '
+                t2[i][j] = '\ '
+    fig,ax = plt.subplots()
+	table = ax.table(cellText=t, cellLoc='center', rowLabels=[x[0] for x in paires], colLabels=[x[0] for x in paires], loc='center')
+    ax.axis('tight')
+    ax.axis('off')
+	ax.xaxis.set_visible(False)
+    ax.yaxis.set_visible(False)
+    
+    fig.show()
+    
+    fig2,ax2 = plt.subplots()
+	table2 = ax2.table(cellText=t2, cellLoc='center', rowLabels=[x[0] for x in paires], colLabels=[x[0] for x in paires], loc='center')
+    ax2.axis('tight')
+    ax2.axis('off')
+	ax2.xaxis.set_visible(False)
+    ax2.yaxis.set_visible(False)
+
+	fig2.show()
+	
+if __name__ == '__main__':    
+	
+	matches_perspective, gold = init()
+	
+    freq_win_early_kills(matches_perspective)
+    
+	paires = [('kills','enemyKills'),('towers','enemyTowers'),('heralds','enemyHeralds'),('dragons','enemyDragons'),('barons','enemyBarons'),('inhibs','enemyInhibs')]
+	
+	eval_list(matches_perspective,paires)
+	
+	plot_obj_winrate(matches_perspective,paires)
+	
+    predictions(matches_perspective,gold)
+	
+	implications(matches_perspective,paires)
+	
+
+	
     #matches_perspective.to_csv('test.csv')
 
-    #freq_win_early_kills(matches_perspective)
-    #plot_obj_winrate(matches_perspective)
-
+    
     """x = gold[gold.NameType == 'golddiff'].describe().drop['std', 'count', '25%', '50%', '75%', 'max']
     x.plot.hist()
     
